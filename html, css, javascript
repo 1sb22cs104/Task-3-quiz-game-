@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Game</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem;
+    }
+    .quiz-container {
+      background: white;
+      border-radius: 10px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .options {
+      margin-bottom: 1rem;
+    }
+    .options label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+    #score {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div id="quiz-content">
+      <!-- Questions will be injected here -->
+    </div>
+    <button id="next-btn">Next</button>
+    <div id="score"></div>
+  </div>
+
+  <script>
+    const quiz = [
+      {
+        type: "single",
+        question: "What is the capital of France?",
+        options: ["Paris", "Berlin", "Madrid", "Rome"],
+        answer: "Paris"
+      },
+      {
+        type: "multi",
+        question: "Which of the following are programming languages?",
+        options: ["Python", "HTML", "Java", "CSS"],
+        answer: ["Python", "Java"]
+      },
+      {
+        type: "fill",
+        question: "Fill in the blank: The sky is ___",
+        answer: "blue"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const quizContent = document.getElementById("quiz-content");
+    const nextBtn = document.getElementById("next-btn");
+    const scoreDisplay = document.getElementById("score");
+
+    function loadQuestion() {
+      const q = quiz[currentQuestion];
+      let html = `<div class="question">${q.question}</div><div class="options">`;
+
+      if (q.type === "single") {
+        q.options.forEach(option => {
+          html += `
+            <label>
+              <input type="radio" name="answer" value="${option}" />
+              ${option}
+            </label>`;
+        });
+      } else if (q.type === "multi") {
+        q.options.forEach(option => {
+          html += `
+            <label>
+              <input type="checkbox" name="answer" value="${option}" />
+              ${option}
+            </label>`;
+        });
+      } else if (q.type === "fill") {
+        html += `<input type="text" id="fill-input" placeholder="Your answer" />`;
+      }
+
+      html += `</div>`;
+      quizContent.innerHTML = html;
+    }
+
+    function getUserAnswer() {
+      const q = quiz[currentQuestion];
+      if (q.type === "single") {
+        const selected = document.querySelector('input[name="answer"]:checked');
+        return selected ? selected.value : null;
+      } else if (q.type === "multi") {
+        const selected = [...document.querySelectorAll('input[name="answer"]:checked')];
+        return selected.map(el => el.value);
+      } else if (q.type === "fill") {
+        return document.getElementById("fill-input").value.trim();
+      }
+    }
+
+    function evaluateAnswer(userAnswer) {
+      const correct = quiz[currentQuestion].answer;
+      if (quiz[currentQuestion].type === "multi") {
+        return (
+          Array.isArray(userAnswer) &&
+          userAnswer.length === correct.length &&
+          userAnswer.every(ans => correct.includes(ans))
+        );
+      }
+      return userAnswer?.toLowerCase() === correct.toString().toLowerCase();
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const userAnswer = getUserAnswer();
+      if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+        alert("Please select or fill an answer.");
+        return;
+      }
+
+      if (evaluateAnswer(userAnswer)) {
+        score++;
+      }
+
+      currentQuestion++;
+      if (currentQuestion < quiz.length) {
+        loadQuestion();
+      } else {
+        quizContent.innerHTML = "";
+        nextBtn.style.display = "none";
+        scoreDisplay.textContent = `You scored ${score} out of ${quiz.length}`;
+      }
+    });
+
+    // Initialize
+    loadQuestion();
+  </script>
+</body>
+</html>
